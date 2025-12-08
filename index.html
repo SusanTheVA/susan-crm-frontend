@@ -9,6 +9,55 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       height: 100vh;
       display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f4f4;
+    }
+    .app-shell {
+      width: 100%;
+      height: 100%;
+      display: none; /* hidden until logged in */
+    }
+    .login-shell {
+      background: white;
+      padding: 24px 28px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      width: 320px;
+    }
+    .login-shell h1 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+    .login-shell label {
+      display: block;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .login-shell input {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    .login-shell button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    .login-error {
+      color: #b00020;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .layout {
+      height: 100vh;
+      display: flex;
     }
     .sidebar {
       width: 30%;
@@ -17,6 +66,7 @@
       padding: 16px;
       box-sizing: border-box;
       overflow-y: auto;
+      background: #fff;
     }
     .main {
       flex: 1;
@@ -24,10 +74,25 @@
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
+      background: #fafafa;
     }
-    h1 {
+    h2 {
       font-size: 18px;
       margin: 0 0 12px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .top-bar button {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
     }
     .conversation-item {
       padding: 8px;
@@ -119,21 +184,43 @@
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h1>Susan CRM v1.0</h1>
-    <div id="conversations"></div>
+  <!-- Login view -->
+  <div class="login-shell" id="login-view">
+    <h1>Susan CRM Login</h1>
+    <p style="font-size:13px; margin:0 0 10px;">WhatsApp-first AI Operating System</p>
+    <label for="login-email">Email</label>
+    <input id="login-email" type="email" autocomplete="email" />
+
+    <label for="login-password">Password</label>
+    <input id="login-password" type="password" autocomplete="current-password" />
+
+    <button id="login-button">Sign in</button>
+    <div class="login-error" id="login-error"></div>
   </div>
 
-  <div class="main">
-    <div class="header">
-      <div id="contact-header" class="contact-header">
-        Select a conversation on the left.
+  <!-- App view -->
+  <div class="app-shell" id="app-view">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="top-bar">
+          <h2 style="margin:0; font-size:16px;">Susan CRM</h2>
+          <button id="logout-button">Logout</button>
+        </div>
+        <div id="conversations"></div>
       </div>
-    </div>
-    <div id="messages" class="messages"></div>
-    <div class="composer">
-      <textarea id="reply-text" placeholder="Type a reply..." disabled></textarea>
-      <button id="send-btn" disabled>Send</button>
+
+      <div class="main">
+        <div class="header">
+          <div id="contact-header" class="contact-header">
+            Select a conversation on the left.
+          </div>
+        </div>
+        <div id="messages" class="messages"></div>
+        <div class="composer">
+          <textarea id="reply-text" placeholder="Type a reply..." disabled></textarea>
+          <button id="send-btn" disabled>Send</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -142,8 +229,85 @@
 
     let currentConversationId = null;
 
+    function showLogin() {
+      document.getElementById("login-view").style.display = "block";
+      document.getElementById("app-view").style.display = "none";
+    }
+
+    function showApp() {
+      document.getElementById("login-view").style.display = "none";
+      document.getElementById("app-view").style.display = "block";
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch(`${API_BASE}/crm/auth/me`, {
+          credentials: "include",
+        });
+        if (res.ok) {
+          showApp();
+          fetchConversations();
+        } else {
+          showLogin();
+        }
+      } catch (e) {
+        console.error("Auth check failed", e);
+        showLogin();
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value.trim();
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
+
+      if (!email || !password) {
+        errorEl.textContent = "Please enter email and password.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/crm/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        });
+        if (res.ok) {
+          showApp();
+          fetchConversations();
+        } else {
+          errorEl.textContent = "Invalid credentials.";
+        }
+      } catch (e) {
+        console.error("Login error", e);
+        errorEl.textContent = "Login failed. Please try again.";
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch(`${API_BASE}/crm/auth/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (e) {
+        console.error("Logout error", e);
+      } finally {
+        currentConversationId = null;
+        document.getElementById("conversations").innerHTML = "";
+        document.getElementById("messages").innerHTML = "";
+        document.getElementById("contact-header").textContent =
+          "Select a conversation on the left.";
+        showLogin();
+      }
+    }
+
     async function fetchConversations() {
-      const res = await fetch(`${API_BASE}/crm/conversations`);
+      const res = await fetch(`${API_BASE}/crm/conversations`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         console.error("Failed to fetch conversations");
         return;
@@ -155,7 +319,7 @@
     function renderConversations(conversations) {
       const container = document.getElementById("conversations");
       container.innerHTML = "";
-      conversations.forEach(conv => {
+      conversations.forEach((conv) => {
         const div = document.createElement("div");
         div.className = "conversation-item";
         div.dataset.id = conv.id;
@@ -179,7 +343,7 @@
         div.addEventListener("click", () => {
           document
             .querySelectorAll(".conversation-item")
-            .forEach(el => el.classList.remove("active"));
+            .forEach((el) => el.classList.remove("active"));
           div.classList.add("active");
           loadConversation(conv.id);
         });
@@ -193,7 +357,10 @@
       document.getElementById("reply-text").disabled = false;
       document.getElementById("send-btn").disabled = false;
 
-      const res = await fetch(`${API_BASE}/crm/conversations/${conversationId}`);
+      const res = await fetch(
+        `${API_BASE}/crm/conversations/${conversationId}`,
+        { credentials: "include" }
+      );
       if (!res.ok) {
         console.error("Failed to fetch conversation detail");
         return;
@@ -208,14 +375,17 @@
       messagesContainer.innerHTML = "";
 
       if (data.contact) {
-        contactHeader.textContent = `${data.contact.name || "(No name)"} – ${data.contact.phone_e164}`;
+        contactHeader.textContent = `${data.contact.name || "(No name)"} – ${
+          data.contact.phone_e164
+        }`;
       }
 
-      (data.messages || []).forEach(msg => {
+      (data.messages || []).forEach((msg) => {
         const wrap = document.createElement("div");
         wrap.style.display = "flex";
         wrap.style.flexDirection = "column";
-        wrap.style.alignItems = msg.direction === "outbound" ? "flex-end" : "flex-start";
+        wrap.style.alignItems =
+          msg.direction === "outbound" ? "flex-end" : "flex-start";
 
         const bubble = document.createElement("div");
         bubble.className = `message ${msg.direction}`;
@@ -247,12 +417,12 @@
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ body })
+            credentials: "include",
+            body: JSON.stringify({ body }),
           }
         );
         if (res.ok) {
           textArea.value = "";
-          // Reload conversation to show the new message
           await loadConversation(currentConversationId);
         } else {
           console.error("Failed to send message");
@@ -264,10 +434,16 @@
       }
     }
 
+    document
+      .getElementById("login-button")
+      .addEventListener("click", login);
+    document
+      .getElementById("logout-button")
+      .addEventListener("click", logout);
     document.getElementById("send-btn").addEventListener("click", sendReply);
 
-    // Initial load
-    fetchConversations();
+    // on load: check if already logged in
+    checkAuth();
   </script>
 </body>
 </html>
