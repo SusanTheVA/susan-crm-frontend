@@ -4,224 +4,324 @@
   <meta charset="UTF-8" />
   <title>Susan CRM v1.0</title>
   <style>
+    /* Global layout + branded background */
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       height: 100vh;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
       display: flex;
       align-items: stretch;
       justify-content: center;
-      background: #4ebfbd;
+
+      /* gradient overlay + background image */
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(56, 189, 248, 0.55)),
+        url("/background.jpg") no-repeat center center fixed;
+      background-size: cover;
     }
+
     .app-shell {
       width: 100%;
       height: 100%;
       display: none; /* hidden until logged in */
     }
+
     .login-shell {
-      background: white;
+      background: rgba(255, 255, 255, 0.96);
       padding: 24px 28px;
-      border-radius: 12px;
-      box-shadow: 0 12px 25px rgba(15, 23, 42, 0.18);
+      border-radius: 18px;
+      box-shadow:
+        0 20px 50px rgba(15, 23, 42, 0.45),
+        0 0 0 1px rgba(148, 163, 184, 0.3);
       width: 340px;
       border-top: 4px solid #7c3aed;
+      align-self: center;
     }
+
     .login-shell h1 {
       font-size: 18px;
-      margin: 0 0 12px;
+      margin: 0 0 8px;
     }
+    .login-shell p {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: #4b5563;
+    }
+
     .login-shell label {
       display: block;
       font-size: 13px;
       margin-top: 10px;
     }
+
     .login-shell input {
       width: 100%;
       padding: 6px 8px;
       margin-top: 4px;
       box-sizing: border-box;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
     }
+
     .login-shell button {
       margin-top: 16px;
       width: 100%;
       padding: 8px 10px;
-      border-radius: 6px;
+      border-radius: 999px;
       border: none;
-      background: #007bff;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
       color: white;
       cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
     }
+
+    .login-shell button:hover {
+      filter: brightness(1.05);
+    }
+
     .login-error {
       color: #b00020;
       font-size: 12px;
       margin-top: 8px;
     }
+
     .layout {
       height: 100vh;
       display: flex;
+      background: rgba(248, 250, 252, 0.98);
+      box-shadow:
+        0 20px 50px rgba(15, 23, 42, 0.45),
+        0 0 0 1px rgba(148, 163, 184, 0.3);
+      border-radius: 24px;
+      margin: 12px;
+      overflow: hidden;
     }
+
     .sidebar {
       width: 30%;
       max-width: 360px;
-      border-right: 1px solid #ddd;
+      border-right: 1px solid #e5e7eb;
       padding: 16px;
       box-sizing: border-box;
       overflow-y: auto;
-      background: #fff;
+      background: #ffffff;
     }
+
     .main {
       flex: 1;
       padding: 16px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      background: #fafafa;
+      background: #f9fafb;
     }
+
     h2 {
       font-size: 18px;
       margin: 0 0 12px;
     }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
+
     .top-bar button {
-      font-size: 12px;
+      font-size: 11px;
       padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      background: white;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
       cursor: pointer;
     }
+
+    .top-bar button:hover {
+      background: #f3f4f6;
+    }
+
     .conversation-item {
       padding: 8px;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       margin-bottom: 6px;
       border: 1px solid transparent;
+      background: #ffffff;
+      transition: background 0.1s ease, border-color 0.1s ease;
     }
+
     .conversation-item:hover {
-      background: #f5f5f5;
+      background: #f3f4ff;
     }
+
     .conversation-item.active {
-      border-color: #007bff;
-      background: #eef5ff;
+      border-color: #4f46e5;
+      background: #eef2ff;
     }
+
     .conversation-name {
       font-weight: 600;
       font-size: 14px;
     }
     .conversation-phone {
       font-size: 12px;
-      color: #666;
+      color: #6b7280;
     }
     .conversation-preview {
       font-size: 12px;
-      color: #444;
+      color: #4b5563;
       margin-top: 2px;
     }
+
     .header {
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid #e5e7eb;
       padding-bottom: 8px;
       margin-bottom: 8px;
     }
+
+    .contact-header {
+      font-size: 13px;
+      color: #111827;
+    }
+
     .messages {
       flex: 1;
       overflow-y: auto;
       padding-right: 8px;
       margin-bottom: 8px;
     }
+
     .message {
       max-width: 70%;
       padding: 8px 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 6px;
       font-size: 13px;
       line-height: 1.4;
     }
+
     .message.inbound {
-      background: #f0f0f0;
+      background: #e5e7eb;
       align-self: flex-start;
     }
+
     .message.outbound {
-      background: #d8f3dc;
+      background: #4f46e5;
+      color: #ffffff;
       align-self: flex-end;
     }
+
     .message-meta {
       font-size: 10px;
-      color: #666;
+      color: #6b7280;
       margin-top: 2px;
     }
+
     .composer {
       display: flex;
       gap: 8px;
-      border-top: 1px solid #ddd;
+      border-top: 1px solid #e5e7eb;
       padding-top: 8px;
     }
+
     .composer textarea {
       flex: 1;
       resize: none;
       height: 60px;
       font-family: inherit;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
     }
+
     .composer button {
       padding: 8px 12px;
-      border-radius: 6px;
+      border-radius: 999px;
       border: none;
-      background: #007bff;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
       color: white;
       cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
     }
+
     .composer button:disabled {
       opacity: 0.5;
       cursor: default;
     }
-    .contact-header {
-      font-size: 13px;
-      color: #333;
-    }
+
     .header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
 
-.status-controls label {
-  font-size: 12px;
-  color: #555;
-}
+    .status-controls label {
+      font-size: 12px;
+      color: #4b5563;
+    }
 
-.status-controls select {
-  margin-left: 4px;
-  font-size: 12px;
-  padding: 2px 4px;
-}
+    .status-controls select {
+      margin-left: 4px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #cbd5f5;
+      background: #eff6ff;
+    }
 
-.stats-panel {
-  font-size: 11px;
-  color: #555;
-  background: #f5f5f5;
-  border-radius: 6px;
-  padding: 6px 8px;
-}
-.stats-panel strong {
-  font-weight: 600;
-}
-.stats-panel .stat-row {
-  display: flex;
-  justify-content: space-between;
-}
+    .stats-panel {
+      font-size: 11px;
+      color: #4b5563;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 6px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
 
+    .stats-panel strong {
+      font-weight: 600;
+    }
+
+    .stats-panel .stat-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .layout {
+        margin: 8px;
+        border-radius: 18px;
+      }
+      .login-shell {
+        margin: 0 8px;
+      }
+    }
   </style>
 </head>
 <body>
   <!-- Login view -->
   <div class="login-shell" id="login-view">
     <h1>Susan CRM Login</h1>
-    <p style="font-size:13px; margin:0 0 10px;">The First AI Operating System</p>
+    <p>The First AI Operating System</p>
+
     <label for="login-email">Email</label>
     <input id="login-email" type="email" autocomplete="email" />
 
@@ -237,402 +337,409 @@
     <div class="layout">
       <div class="sidebar">
         <div class="top-bar">
-  <div style="display:flex; align-items:center; gap:8px;">
-    <img src="susan-logo.png" alt="Susan" style="height:26px; border-radius:6px;" />
-    <div>
-      <div style="font-weight:600; font-size:14px;">Susan CRM</div>
-      <div style="font-size:11px; color:#6b7280;">WhatsApp-first AI Operating System</div>
-    </div>
-  </div>
-  <div style="display:flex; align-items:center; gap:8px;">
-    <span id="user-email" style="font-size:11px; color:#6b7280;"></span>
-    <button id="logout-button">Logout</button>
-  </div>
-</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="susan-logo.png" alt="Susan" style="height:26px; border-radius:6px;" />
+            <div>
+              <div style="font-weight:600; font-size:14px;">Susan CRM</div>
+              <div style="font-size:11px; color:#6b7280;">WhatsApp-first AI Operating System</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="user-email" style="font-size:11px; color:#6b7280;"></span>
+            <button id="logout-button">Logout</button>
+          </div>
+        </div>
 
         <div id="conversations"></div>
       </div>
 
       <div class="main">
-  <div class="header">
-    <div class="header-top">
-      <div id="contact-header" class="contact-header">
-        Select a conversation on the left.
-      </div>
-      <div class="status-controls">
-        <label>
-          Status:
-          <select id="status-select" disabled>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-          </select>
-        </label>
-      </div>
-    </div>
+        <div class="header">
+          <div class="header-top">
+            <div id="contact-header" class="contact-header">
+              Select a conversation on the left.
+            </div>
+            <div class="status-controls">
+              <label>
+                Status:
+                <select id="status-select" disabled>
+                  <option value="open">Open</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </label>
+            </div>
+          </div>
 
-    <div id="stats-panel" class="stats-panel">
-      <!-- Stats will be injected here by JS -->
-    </div>
-  </div>
+          <div id="stats-panel" class="stats-panel">
+            <!-- Stats injected by JS -->
+          </div>
+        </div>
 
-  <div id="messages" class="messages"></div>
-  <div class="composer">
-
+        <div id="messages" class="messages"></div>
+        <div class="composer">
           <textarea id="reply-text" placeholder="Type a reply..." disabled></textarea>
           <button id="send-btn" disabled>Send</button>
         </div>
       </div>
     </div>
   </div>
-<script>
-<script>
-  const API_BASE = "https://api.susan-crm.com";
 
-  let currentConversationId = null;
-  let currentConversationMeta = null;
+  <script>
+    const API_BASE = "https://api.susan-crm.com";
 
-  function showLogin() {
-    document.getElementById("login-view").style.display = "block";
-    document.getElementById("app-view").style.display = "none";
-  }
+    let currentConversationId = null;
+    let currentConversationMeta = null;
 
-  function showApp() {
-    document.getElementById("login-view").style.display = "none";
-    document.getElementById("app-view").style.display = "block";
-  }
+    function showLogin() {
+      document.getElementById("login-view").style.display = "block";
+      document.getElementById("app-view").style.display = "none";
+    }
 
-  async function checkAuth() {
-    try {
-      const res = await fetch(`${API_BASE}/crm/auth/me`, {
-        credentials: "include",
-      });
+    function showApp() {
+      document.getElementById("login-view").style.display = "none";
+      document.getElementById("app-view").style.display = "block";
+    }
 
-      if (res.ok) {
-        const data = await res.json();
-        const emailSpan = document.getElementById("user-email");
+    async function checkAuth() {
+      try {
+        const res = await fetch(`${API_BASE}/crm/auth/me`, {
+          credentials: "include",
+        });
 
-        if (emailSpan && data.user && data.user.email) {
-          emailSpan.textContent = data.user.email;
+        if (res.ok) {
+          const data = await res.json();
+          const emailSpan = document.getElementById("user-email");
+
+          if (emailSpan && data.user && data.user.email) {
+            emailSpan.textContent = data.user.email;
+          }
+
+          showApp();
+          fetchConversations();
+          fetchStats();
+        } else {
+          showLogin();
         }
-
-        showApp();
-        fetchConversations();
-        fetchStats();
-      } else {
+      } catch (e) {
+        console.error("Auth check failed", e);
         showLogin();
       }
-    } catch (e) {
-      console.error("Auth check failed", e);
-      showLogin();
-    }
-  }
-
-  async function login() {
-    const email = document.getElementById("login-email").value.trim();
-    const password = document
-      .getElementById("login-password")
-      .value.trim();
-    const errorEl = document.getElementById("login-error");
-    errorEl.textContent = "";
-
-    if (!email || !password) {
-      errorEl.textContent = "Please enter email and password.";
-      return;
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/crm/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-      if (res.ok) {
-        showApp();
-        fetchConversations();
-        fetchStats();
-      } else {
-        errorEl.textContent = "Invalid credentials.";
-      }
-    } catch (e) {
-      console.error("Login error", e);
-      errorEl.textContent = "Login failed. Please try again.";
-    }
-  }
+    async function login() {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document
+        .getElementById("login-password")
+        .value.trim();
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
 
-  async function logout() {
-    try {
-      await fetch(`${API_BASE}/crm/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (e) {
-      console.error("Logout error", e);
-    } finally {
-      currentConversationId = null;
-      currentConversationMeta = null;
-      document.getElementById("conversations").innerHTML = "";
-      document.getElementById("messages").innerHTML = "";
-      document.getElementById("contact-header").textContent =
-        "Select a conversation on the left.";
-      document.getElementById("reply-text").value = "";
-      document.getElementById("reply-text").disabled = true;
-      document.getElementById("send-btn").disabled = true;
-      document.getElementById("status-select").disabled = true;
-      document.getElementById("stats-panel").innerHTML = "";
-      showLogin();
-    }
-  }
-
-  async function fetchConversations() {
-    const res = await fetch(`${API_BASE}/crm/conversations`, {
-      credentials: "include",
-    });
-    if (!res.ok) {
-      console.error("Failed to fetch conversations");
-      return;
-    }
-    const data = await res.json();
-    renderConversations(data);
-  }
-
-  function renderConversations(conversations) {
-    const container = document.getElementById("conversations");
-    container.innerHTML = "";
-    conversations.forEach((conv) => {
-      const div = document.createElement("div");
-      div.className = "conversation-item";
-      div.dataset.id = conv.id;
-
-      const name = document.createElement("div");
-      name.className = "conversation-name";
-      name.textContent = conv.name || "(No name)";
-
-      const phone = document.createElement("div");
-      phone.className = "conversation-phone";
-      phone.textContent = conv.phone_e164 || "";
-
-      const preview = document.createElement("div");
-      preview.className = "conversation-preview";
-      preview.textContent = conv.last_message_preview || "";
-
-      div.appendChild(name);
-      div.appendChild(phone);
-      div.appendChild(preview);
-
-      div.addEventListener("click", () => {
-        document
-          .querySelectorAll(".conversation-item")
-          .forEach((el) => el.classList.remove("active"));
-        div.classList.add("active");
-        loadConversation(conv);
-      });
-
-      container.appendChild(div);
-    });
-  }
-
-  async function loadConversation(conv) {
-    currentConversationId = conv.id;
-    currentConversationMeta = conv;
-
-    document.getElementById("reply-text").disabled = false;
-    document.getElementById("send-btn").disabled = false;
-
-    const statusSelect = document.getElementById("status-select");
-    statusSelect.disabled = false;
-    statusSelect.value = conv.status || "open";
-
-    const res = await fetch(
-      `${API_BASE}/crm/conversations/${conv.id}/messages`,
-      { credentials: "include" }
-    );
-    if (!res.ok) {
-      console.error("Failed to fetch conversation messages");
-      return;
-    }
-    const messages = await res.json();
-    renderConversationDetail(conv, messages);
-
-    // Mark inbound messages as read once we've loaded the conversation
-    await markConversationRead(conv.id);
-    // Refresh stats (unread count etc)
-    fetchStats();
-  }
-
-  function renderConversationDetail(conv, messages) {
-    const contactHeader = document.getElementById("contact-header");
-    const messagesContainer = document.getElementById("messages");
-    messagesContainer.innerHTML = "";
-
-    const name = conv.name || "(No name)";
-    const phone = conv.phone_e164 || "";
-    contactHeader.textContent = phone ? `${name} – ${phone}` : name;
-
-    (messages || []).forEach((msg) => {
-      const wrap = document.createElement("div");
-      wrap.style.display = "flex";
-      wrap.style.flexDirection = "column";
-      wrap.style.alignItems =
-        msg.direction === "outbound" ? "flex-end" : "flex-start";
-
-      const bubble = document.createElement("div");
-      bubble.className = `message ${msg.direction}`;
-      bubble.textContent = msg.body;
-
-      const meta = document.createElement("div");
-      meta.className = "message-meta";
-
-      if (msg.created_at) {
-        const d = new Date(msg.created_at);
-        meta.textContent = d.toLocaleString();
-      } else {
-        meta.textContent = "";
+      if (!email || !password) {
+        errorEl.textContent = "Please enter email and password.";
+        return;
       }
 
-      wrap.appendChild(bubble);
-      wrap.appendChild(meta);
-      messagesContainer.appendChild(wrap);
-    });
-
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }
-
-  async function markConversationRead(conversationId) {
-    try {
-      await fetch(`${API_BASE}/crm/conversations/${conversationId}/read`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (e) {
-      console.error("Failed to mark conversation read", e);
-    }
-  }
-
-  async function sendReply() {
-    const textArea = document.getElementById("reply-text");
-    const btn = document.getElementById("send-btn");
-    const body = textArea.value.trim();
-    if (!body || !currentConversationId) return;
-
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(
-        `${API_BASE}/crm/conversations/${currentConversationId}/send`,
-        {
+      try {
+        const res = await fetch(`${API_BASE}/crm/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ body }),
-        }
-      );
-      if (res.ok) {
-        textArea.value = "";
-        if (currentConversationMeta) {
-          await loadConversation(currentConversationMeta);
-        } else {
+          body: JSON.stringify({ email, password }),
+        });
+        if (res.ok) {
+          showApp();
           fetchConversations();
+          fetchStats();
+        } else {
+          errorEl.textContent = "Invalid credentials.";
         }
-      } else {
-        console.error("Failed to send message");
+      } catch (e) {
+        console.error("Login error", e);
+        errorEl.textContent = "Login failed. Please try again.";
       }
-    } catch (err) {
-      console.error("Error sending message", err);
-    } finally {
-      btn.disabled = false;
     }
-  }
 
-  async function updateStatus(newStatus) {
-    if (!currentConversationId) return;
-    try {
-      const res = await fetch(
-        `${API_BASE}/crm/conversations/${currentConversationId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+    async function logout() {
+      try {
+        await fetch(`${API_BASE}/crm/auth/logout`, {
+          method: "POST",
           credentials: "include",
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
-      if (!res.ok) {
-        console.error("Failed to update status");
-        return;
-      }
-      if (currentConversationMeta) {
-        currentConversationMeta.status = newStatus;
-      }
-      fetchStats();
-    } catch (e) {
-      console.error("Error updating status", e);
-    }
-  }
+        });
+      } catch (e) {
+        console.error("Logout error", e);
+      } finally {
+        currentConversationId = null;
+        currentConversationMeta = null;
+        document.getElementById("conversations").innerHTML = "";
+        document.getElementById("messages").innerHTML = "";
+        document.getElementById("contact-header").textContent =
+          "Select a conversation on the left.";
+        document.getElementById("reply-text").value = "";
+        document.getElementById("reply-text").disabled = true;
+        document.getElementById("send-btn").disabled = true;
 
-  async function fetchStats() {
-    try {
-      const res = await fetch(`${API_BASE}/crm/stats`, {
+        const statusEl = document.getElementById("status-select");
+        if (statusEl) {
+          statusEl.disabled = true;
+        }
+        const statsPanel = document.getElementById("stats-panel");
+        if (statsPanel) {
+          statsPanel.innerHTML = "";
+        }
+        showLogin();
+      }
+    }
+
+    async function fetchConversations() {
+      const res = await fetch(`${API_BASE}/crm/conversations`, {
         credentials: "include",
       });
       if (!res.ok) {
-        console.error("Failed to fetch stats");
+        console.error("Failed to fetch conversations");
         return;
       }
-      const stats = await res.json();
-      renderStats(stats);
-    } catch (e) {
-      console.error("Error fetching stats", e);
+      const data = await res.json();
+      renderConversations(data);
     }
-  }
 
-  function renderStats(stats) {
-    const panel = document.getElementById("stats-panel");
-    if (!panel) return;
+    function renderConversations(conversations) {
+      const container = document.getElementById("conversations");
+      container.innerHTML = "";
+      conversations.forEach((conv) => {
+        const div = document.createElement("div");
+        div.className = "conversation-item";
+        div.dataset.id = conv.id;
 
-    panel.innerHTML = `
-      <div class="stat-row">
-        <span>Total conversations</span>
-        <strong>${stats.total_conversations ?? 0}</strong>
-      </div>
-      <div class="stat-row">
-        <span>Conversations with replies</span>
-        <strong>${stats.conversations_with_replies ?? 0}</strong>
-      </div>
-      <div class="stat-row">
-        <span>Inbound messages</span>
-        <strong>${stats.total_inbound_messages ?? 0}</strong>
-      </div>
-      <div class="stat-row">
-        <span>Outbound messages</span>
-        <strong>${stats.total_outbound_messages ?? 0}</strong>
-      </div>
-      <div class="stat-row">
-        <span>Unread inbound</span>
-        <strong>${stats.total_unread_inbound ?? 0}</strong>
-      </div>
-    `;
-  }
+        const name = document.createElement("div");
+        name.className = "conversation-name";
+        name.textContent = conv.name || "(No name)";
 
-  document
-    .getElementById("login-button")
-    .addEventListener("click", login);
-  document
-    .getElementById("logout-button")
-    .addEventListener("click", logout);
-  document
-    .getElementById("send-btn")
-    .addEventListener("click", sendReply);
+        const phone = document.createElement("div");
+        phone.className = "conversation-phone";
+        phone.textContent = conv.phone_e164 || "";
 
-  document
-    .getElementById("status-select")
-    .addEventListener("change", (e) => {
-      updateStatus(e.target.value);
-    });
+        const preview = document.createElement("div");
+        preview.className = "conversation-preview";
+        preview.textContent = conv.last_message_preview || "";
 
-  // on load: check if already logged in
-  checkAuth();
-</script>
+        div.appendChild(name);
+        div.appendChild(phone);
+        div.appendChild(preview);
 
-  </script>  
+        div.addEventListener("click", () => {
+          document
+            .querySelectorAll(".conversation-item")
+            .forEach((el) => el.classList.remove("active"));
+          div.classList.add("active");
+          loadConversation(conv);
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    async function loadConversation(conv) {
+      currentConversationId = conv.id;
+      currentConversationMeta = conv;
+
+      document.getElementById("reply-text").disabled = false;
+      document.getElementById("send-btn").disabled = false;
+
+      const statusSelect = document.getElementById("status-select");
+      if (statusSelect) {
+        statusSelect.disabled = false;
+        statusSelect.value = conv.status || "open";
+      }
+
+      const res = await fetch(
+        `${API_BASE}/crm/conversations/${conv.id}/messages`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        console.error("Failed to fetch conversation messages");
+        return;
+      }
+      const messages = await res.json();
+      renderConversationDetail(conv, messages);
+
+      // Mark inbound messages as read & refresh stats
+      await markConversationRead(conv.id);
+      fetchStats();
+    }
+
+    function renderConversationDetail(conv, messages) {
+      const contactHeader = document.getElementById("contact-header");
+      const messagesContainer = document.getElementById("messages");
+      messagesContainer.innerHTML = "";
+
+      const name = conv.name || "(No name)";
+      const phone = conv.phone_e164 || "";
+      contactHeader.textContent = phone ? `${name} – ${phone}` : name;
+
+      (messages || []).forEach((msg) => {
+        const wrap = document.createElement("div");
+        wrap.style.display = "flex";
+        wrap.style.flexDirection = "column";
+        wrap.style.alignItems =
+          msg.direction === "outbound" ? "flex-end" : "flex-start";
+
+        const bubble = document.createElement("div");
+        bubble.className = `message ${msg.direction}`;
+        bubble.textContent = msg.body;
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+
+        if (msg.created_at) {
+          const d = new Date(msg.created_at);
+          meta.textContent = d.toLocaleString();
+        } else {
+          meta.textContent = "";
+        }
+
+        wrap.appendChild(bubble);
+        wrap.appendChild(meta);
+        messagesContainer.appendChild(wrap);
+      });
+
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function markConversationRead(conversationId) {
+      try {
+        await fetch(`${API_BASE}/crm/conversations/${conversationId}/read`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (e) {
+        console.error("Failed to mark conversation read", e);
+      }
+    }
+
+    async function sendReply() {
+      const textArea = document.getElementById("reply-text");
+      const btn = document.getElementById("send-btn");
+      const body = textArea.value.trim();
+      if (!body || !currentConversationId) return;
+
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/crm/conversations/${currentConversationId}/send`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ body }),
+          }
+        );
+        if (res.ok) {
+          textArea.value = "";
+          if (currentConversationMeta) {
+            await loadConversation(currentConversationMeta);
+          } else {
+            fetchConversations();
+            fetchStats();
+          }
+        } else {
+          console.error("Failed to send message");
+        }
+      } catch (err) {
+        console.error("Error sending message", err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function updateStatus(newStatus) {
+      if (!currentConversationId) return;
+      try {
+        const res = await fetch(
+          `${API_BASE}/crm/conversations/${currentConversationId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ status: newStatus }),
+          }
+        );
+        if (!res.ok) {
+          console.error("Failed to update status");
+          return;
+        }
+        if (currentConversationMeta) {
+          currentConversationMeta.status = newStatus;
+        }
+        fetchStats();
+      } catch (e) {
+        console.error("Error updating status", e);
+      }
+    }
+
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${API_BASE}/crm/stats`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          console.error("Failed to fetch stats");
+          return;
+        }
+        const stats = await res.json();
+        renderStats(stats);
+      } catch (e) {
+        console.error("Error fetching stats", e);
+      }
+    }
+
+    function renderStats(stats) {
+      const panel = document.getElementById("stats-panel");
+      if (!panel) return;
+
+      panel.innerHTML = `
+        <div class="stat-row">
+          <span>Total conversations</span>
+          <strong>${stats.total_conversations ?? 0}</strong>
+        </div>
+        <div class="stat-row">
+          <span>Conversations with replies</span>
+          <strong>${stats.conversations_with_replies ?? 0}</strong>
+        </div>
+        <div class="stat-row">
+          <span>Inbound messages</span>
+          <strong>${stats.total_inbound_messages ?? 0}</strong>
+        </div>
+        <div class="stat-row">
+          <span>Outbound messages</span>
+          <strong>${stats.total_outbound_messages ?? 0}</strong>
+        </div>
+        <div class="stat-row">
+          <span>Unread inbound</span>
+          <strong>${stats.total_unread_inbound ?? 0}</strong>
+        </div>
+      `;
+    }
+
+    document
+      .getElementById("login-button")
+      .addEventListener("click", login);
+    document
+      .getElementById("logout-button")
+      .addEventListener("click", logout);
+    document
+      .getElementById("send-btn")
+      .addEventListener("click", sendReply);
+
+    const statusSelectEl = document.getElementById("status-select");
+    if (statusSelectEl) {
+      statusSelectEl.addEventListener("change", (e) => {
+        updateStatus(e.target.value);
+      });
+    }
+
+    // on load: check if already logged in
+    checkAuth();
+  </script>
 </body>
 </html>
