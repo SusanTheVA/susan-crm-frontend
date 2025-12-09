@@ -251,21 +251,30 @@
     }
 
     async function checkAuth() {
-      try {
-        const res = await fetch(`${API_BASE}/crm/auth/me`, {
-          credentials: "include",
-        });
-        if (res.ok) {
-  const data = await res.json();
-  const emailSpan = document.getElementById("user-email");
-  if (emailSpan && data.user && data.user.email) {
-    emailSpan.textContent = data.user.email;
+  try {
+    const res = await fetch(`${API_BASE}/crm/auth/me`, {
+      credentials: "include",
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const emailSpan = document.getElementById("user-email");
+
+      if (emailSpan && data.user && data.user.email) {
+        emailSpan.textContent = data.user.email;
+      }
+
+      showApp();
+      fetchConversations();
+    } else {
+      showLogin();
+    }
+  } catch (e) {
+    console.error("Auth check failed", e);
+    showLogin();
   }
-  showApp();
-  fetchConversations();
-} else {
-  showLogin();
 }
+
 
 
     async function login() {
@@ -274,29 +283,30 @@
       const errorEl = document.getElementById("login-error");
       errorEl.textContent = "";
 
-      if (!email || !password) {
-        errorEl.textContent = "Please enter email and password.";
-        return;
-      }
+        if (!email || !password) {
+    errorEl.textContent = "Please enter email and password.";
+    return;
+  }
 
-      try {
-        const res = await fetch(`${API_BASE}/crm/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        });
-        if (res.ok) {
-          showApp();
-          fetchConversations();
-        } else {
-          errorEl.textContent = "Invalid credentials.";
-        }
-      } catch (e) {
-        console.error("Login error", e);
-        errorEl.textContent = "Login failed. Please try again.";
-      }
+  try {
+    const res = await fetch(`${API_BASE}/crm/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    });
+    if (res.ok) {
+      showApp();
+      fetchConversations();
+    } else {
+      errorEl.textContent = "Invalid credentials.";
     }
+  } catch (e) {
+    console.error("Login error", e);
+    errorEl.textContent = "Login failed. Please try again.";
+  }
+}
+
 
     async function logout() {
       try {
