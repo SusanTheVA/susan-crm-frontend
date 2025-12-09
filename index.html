@@ -188,7 +188,7 @@
   <!-- Login view -->
   <div class="login-shell" id="login-view">
     <h1>Susan CRM Login</h1>
-    <p style="font-size:13px; margin:0 0 10px;">WhatsApp-first AI Operating System</p>
+    <p style="font-size:13px; margin:0 0 10px;">The First AI Operating System</p>
     <label for="login-email">Email</label>
     <input id="login-email" type="email" autocomplete="email" />
 
@@ -234,238 +234,253 @@
       </div>
     </div>
   </div>
+<script>
+  const API_BASE = "https://api.susan-crm.com";
 
-  <script>
-    const API_BASE = "https://api.susan-crm.com";
+  let currentConversationId = null;
+  let currentConversationMeta = null; // store the selected conversation's meta
 
-    let currentConversationId = null;
-
-    function showLogin() {
-      document.getElementById("login-view").style.display = "block";
-      document.getElementById("app-view").style.display = "none";
-    }
-
-    function showApp() {
-      document.getElementById("login-view").style.display = "none";
-      document.getElementById("app-view").style.display = "block";
-    }
-
-    async function checkAuth() {
-  try {
-    const res = await fetch(`${API_BASE}/crm/auth/me`, {
-      credentials: "include",
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const emailSpan = document.getElementById("user-email");
-
-      if (emailSpan && data.user && data.user.email) {
-        emailSpan.textContent = data.user.email;
-      }
-
-      showApp();
-      fetchConversations();
-    } else {
-      showLogin();
-    }
-  } catch (e) {
-    console.error("Auth check failed", e);
-    showLogin();
-  }
-}
-
-
-
-    async function login() {
-      const email = document.getElementById("login-email").value.trim();
-      const password = document.getElementById("login-password").value.trim();
-      const errorEl = document.getElementById("login-error");
-      errorEl.textContent = "";
-
-        if (!email || !password) {
-    errorEl.textContent = "Please enter email and password.";
-    return;
+  function showLogin() {
+    document.getElementById("login-view").style.display = "block";
+    document.getElementById("app-view").style.display = "none";
   }
 
-  try {
-    const res = await fetch(`${API_BASE}/crm/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
-    if (res.ok) {
-      showApp();
-      fetchConversations();
-    } else {
-      errorEl.textContent = "Invalid credentials.";
-    }
-  } catch (e) {
-    console.error("Login error", e);
-    errorEl.textContent = "Login failed. Please try again.";
+  function showApp() {
+    document.getElementById("login-view").style.display = "none";
+    document.getElementById("app-view").style.display = "block";
   }
-}
 
-
-    async function logout() {
-      try {
-        await fetch(`${API_BASE}/crm/auth/logout`, {
-          method: "POST",
-          credentials: "include",
-        });
-      } catch (e) {
-        console.error("Logout error", e);
-      } finally {
-        currentConversationId = null;
-        document.getElementById("conversations").innerHTML = "";
-        document.getElementById("messages").innerHTML = "";
-        document.getElementById("contact-header").textContent =
-          "Select a conversation on the left.";
-        showLogin();
-      }
-    }
-
-    async function fetchConversations() {
-      const res = await fetch(`${API_BASE}/crm/conversations`, {
+  async function checkAuth() {
+    try {
+      const res = await fetch(`${API_BASE}/crm/auth/me`, {
         credentials: "include",
       });
-      if (!res.ok) {
-        console.error("Failed to fetch conversations");
-        return;
-      }
-      const data = await res.json();
-      renderConversations(data);
-    }
 
-    function renderConversations(conversations) {
-      const container = document.getElementById("conversations");
-      container.innerHTML = "";
-      conversations.forEach((conv) => {
-        const div = document.createElement("div");
-        div.className = "conversation-item";
-        div.dataset.id = conv.id;
+      if (res.ok) {
+        const data = await res.json();
+        const emailSpan = document.getElementById("user-email");
 
-        const name = document.createElement("div");
-        name.className = "conversation-name";
-        name.textContent = conv.name || "(No name)";
-
-        const phone = document.createElement("div");
-        phone.className = "conversation-phone";
-        phone.textContent = conv.phone_e164;
-
-        const preview = document.createElement("div");
-        preview.className = "conversation-preview";
-        preview.textContent = conv.last_message_preview || "";
-
-        div.appendChild(name);
-        div.appendChild(phone);
-        div.appendChild(preview);
-
-        div.addEventListener("click", () => {
-          document
-            .querySelectorAll(".conversation-item")
-            .forEach((el) => el.classList.remove("active"));
-          div.classList.add("active");
-          loadConversation(conv.id);
-        });
-
-        container.appendChild(div);
-      });
-    }
-
-    async function loadConversation(conversationId) {
-      currentConversationId = conversationId;
-      document.getElementById("reply-text").disabled = false;
-      document.getElementById("send-btn").disabled = false;
-
-      const res = await fetch(
-        `${API_BASE}/crm/conversations/${conversationId}`,
-        { credentials: "include" }
-      );
-      if (!res.ok) {
-        console.error("Failed to fetch conversation detail");
-        return;
-      }
-      const data = await res.json();
-      renderConversationDetail(data);
-    }
-
-    function renderConversationDetail(data) {
-      const contactHeader = document.getElementById("contact-header");
-      const messagesContainer = document.getElementById("messages");
-      messagesContainer.innerHTML = "";
-
-      if (data.contact) {
-        contactHeader.textContent = `${data.contact.name || "(No name)"} – ${
-          data.contact.phone_e164
-        }`;
-      }
-
-      (data.messages || []).forEach((msg) => {
-        const wrap = document.createElement("div");
-        wrap.style.display = "flex";
-        wrap.style.flexDirection = "column";
-        wrap.style.alignItems =
-          msg.direction === "outbound" ? "flex-end" : "flex-start";
-
-        const bubble = document.createElement("div");
-        bubble.className = `message ${msg.direction}`;
-        bubble.textContent = msg.body;
-
-        const meta = document.createElement("div");
-        meta.className = "message-meta";
-        meta.textContent = msg.sent_at || "";
-
-        wrap.appendChild(bubble);
-        wrap.appendChild(meta);
-        messagesContainer.appendChild(wrap);
-      });
-
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    async function sendReply() {
-      const textArea = document.getElementById("reply-text");
-      const btn = document.getElementById("send-btn");
-      const body = textArea.value.trim();
-      if (!body || !currentConversationId) return;
-
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(
-          `${API_BASE}/crm/conversations/${currentConversationId}/send`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ body }),
-          }
-        );
-        if (res.ok) {
-          textArea.value = "";
-          await loadConversation(currentConversationId);
-        } else {
-          console.error("Failed to send message");
+        if (emailSpan && data.user && data.user.email) {
+          emailSpan.textContent = data.user.email;
         }
-      } catch (err) {
-        console.error("Error sending message", err);
-      } finally {
-        btn.disabled = false;
+
+        showApp();
+        fetchConversations();
+      } else {
+        showLogin();
       }
+    } catch (e) {
+      console.error("Auth check failed", e);
+      showLogin();
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document
+      .getElementById("login-password")
+      .value.trim();
+    const errorEl = document.getElementById("login-error");
+    errorEl.textContent = "";
+
+    if (!email || !password) {
+      errorEl.textContent = "Please enter email and password.";
+      return;
     }
 
-    document
-      .getElementById("login-button")
-      .addEventListener("click", login);
-    document
-      .getElementById("logout-button")
-      .addEventListener("click", logout);
-    document.getElementById("send-btn").addEventListener("click", sendReply);
+    try {
+      const res = await fetch(`${API_BASE}/crm/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        showApp();
+        fetchConversations();
+      } else {
+        errorEl.textContent = "Invalid credentials.";
+      }
+    } catch (e) {
+      console.error("Login error", e);
+      errorEl.textContent = "Login failed. Please try again.";
+    }
+  }
 
-    // on load: check if already logged in
-    checkAuth();
-  </script>
+  async function logout() {
+    try {
+      await fetch(`${API_BASE}/crm/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (e) {
+      console.error("Logout error", e);
+    } finally {
+      currentConversationId = null;
+      currentConversationMeta = null;
+      document.getElementById("conversations").innerHTML = "";
+      document.getElementById("messages").innerHTML = "";
+      document.getElementById("contact-header").textContent =
+        "Select a conversation on the left.";
+      document.getElementById("reply-text").value = "";
+      document.getElementById("reply-text").disabled = true;
+      document.getElementById("send-btn").disabled = true;
+      showLogin();
+    }
+  }
+
+  async function fetchConversations() {
+    const res = await fetch(`${API_BASE}/crm/conversations`, {
+      credentials: "include",
+    });
+    if (!res.ok) {
+      console.error("Failed to fetch conversations");
+      return;
+    }
+    const data = await res.json();
+    renderConversations(data);
+  }
+
+  function renderConversations(conversations) {
+    const container = document.getElementById("conversations");
+    container.innerHTML = "";
+    conversations.forEach((conv) => {
+      const div = document.createElement("div");
+      div.className = "conversation-item";
+      div.dataset.id = conv.id;
+
+      const name = document.createElement("div");
+      name.className = "conversation-name";
+      name.textContent = conv.name || "(No name)";
+
+      const phone = document.createElement("div");
+      phone.className = "conversation-phone";
+      phone.textContent = conv.phone_e164 || "";
+
+      const preview = document.createElement("div");
+      preview.className = "conversation-preview";
+      preview.textContent = conv.last_message_preview || "";
+
+      div.appendChild(name);
+      div.appendChild(phone);
+      div.appendChild(preview);
+
+      div.addEventListener("click", () => {
+        document
+          .querySelectorAll(".conversation-item")
+          .forEach((el) => el.classList.remove("active"));
+        div.classList.add("active");
+        // pass the whole conversation object so we can use name/phone later
+        loadConversation(conv);
+      });
+
+      container.appendChild(div);
+    });
+  }
+
+  async function loadConversation(conv) {
+    currentConversationId = conv.id;
+    currentConversationMeta = conv; // store for header + future use
+
+    document.getElementById("reply-text").disabled = false;
+    document.getElementById("send-btn").disabled = false;
+
+    const res = await fetch(
+      `${API_BASE}/crm/conversations/${conv.id}/messages`,
+      { credentials: "include" }
+    );
+    if (!res.ok) {
+      console.error("Failed to fetch conversation messages");
+      return;
+    }
+    const messages = await res.json();
+    renderConversationDetail(conv, messages);
+  }
+
+  function renderConversationDetail(conv, messages) {
+    const contactHeader = document.getElementById("contact-header");
+    const messagesContainer = document.getElementById("messages");
+    messagesContainer.innerHTML = "";
+
+    const name = conv.name || "(No name)";
+    const phone = conv.phone_e164 || "";
+    contactHeader.textContent = phone ? `${name} – ${phone}` : name;
+
+    (messages || []).forEach((msg) => {
+      const wrap = document.createElement("div");
+      wrap.style.display = "flex";
+      wrap.style.flexDirection = "column";
+      wrap.style.alignItems =
+        msg.direction === "outbound" ? "flex-end" : "flex-start";
+
+      const bubble = document.createElement("div");
+      bubble.className = `message ${msg.direction}`;
+      bubble.textContent = msg.body;
+
+      const meta = document.createElement("div");
+      meta.className = "message-meta";
+
+      if (msg.created_at) {
+        const d = new Date(msg.created_at);
+        meta.textContent = d.toLocaleString();
+      } else {
+        meta.textContent = "";
+      }
+
+      wrap.appendChild(bubble);
+      wrap.appendChild(meta);
+      messagesContainer.appendChild(wrap);
+    });
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  async function sendReply() {
+    const textArea = document.getElementById("reply-text");
+    const btn = document.getElementById("send-btn");
+    const body = textArea.value.trim();
+    if (!body || !currentConversationId) return;
+
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/crm/conversations/${currentConversationId}/send`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ body }),
+        }
+      );
+      if (res.ok) {
+        textArea.value = "";
+        // reload the conversation using the stored meta
+        if (currentConversationMeta) {
+          await loadConversation(currentConversationMeta);
+        }
+      } else {
+        console.error("Failed to send message");
+      }
+    } catch (err) {
+      console.error("Error sending message", err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document
+    .getElementById("login-button")
+    .addEventListener("click", login);
+  document
+    .getElementById("logout-button")
+    .addEventListener("click", logout);
+  document
+    .getElementById("send-btn")
+    .addEventListener("click", sendReply);
+
+  // on load: check if already logged in
+  checkAuth();
+</script>  
 </body>
 </html>
