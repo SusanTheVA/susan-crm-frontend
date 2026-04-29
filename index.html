@@ -237,7 +237,22 @@
       border: 1px solid #cbd5e1;
       padding: 6px 8px;
     }
+    
+.call-button {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
 
+.call-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
     .composer button {
       padding: 8px 12px;
       border-radius: 999px;
@@ -359,7 +374,8 @@
             <div id="contact-header" class="contact-header">
               Select a conversation on the left.
             </div>
-            <div class="status-controls">
+            <div class="status-controls" style="display:flex; align-items:center; gap:8px;">
+              <button id="call-btn" class="call-button" disabled>Call lead</button>
               <label>
                 Status:
                 <select id="status-select" disabled>
@@ -477,6 +493,10 @@
         document.getElementById("reply-text").value = "";
         document.getElementById("reply-text").disabled = true;
         document.getElementById("send-btn").disabled = true;
+        const callBtn = document.getElementById("call-btn");
+        if (callBtn) {
+          callBtn.disabled = true;
+}
 
         const statusEl = document.getElementById("status-select");
         if (statusEl) {
@@ -544,6 +564,7 @@
 
       document.getElementById("reply-text").disabled = false;
       document.getElementById("send-btn").disabled = false;
+      document.getElementById("call-btn").disabled = false;
 
       const statusSelect = document.getElementById("status-select");
       if (statusSelect) {
@@ -616,6 +637,44 @@
       }
     }
 
+    async function createCallTask() {
+  if (!currentConversationId) return;
+
+  const btn = document.getElementById("call-btn");
+  btn.disabled = true;
+  btn.textContent = "Queued...";
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/crm/conversations/${currentConversationId}/call`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ call_mode: "inbound_followup" }),
+      }
+    );
+
+    if (!res.ok) {
+      console.error("Failed to create call task");
+      btn.textContent = "Call failed";
+      setTimeout(() => {
+        btn.textContent = "Call lead";
+        btn.disabled = false;
+      }, 2000);
+      return;
+    }
+
+    btn.textContent = "Call queued";
+  } catch (err) {
+    console.error("Error creating call task", err);
+    btn.textContent = "Call failed";
+    setTimeout(() => {
+      btn.textContent = "Call lead";
+      btn.disabled = false;
+    }, 2000);
+  }
+}
     async function sendReply() {
       const textArea = document.getElementById("reply-text");
       const btn = document.getElementById("send-btn");
@@ -731,6 +790,10 @@
       .getElementById("send-btn")
       .addEventListener("click", sendReply);
 
+    document
+  .getElementById("call-btn")
+  .addEventListener("click", createCallTask);
+    
     const statusSelectEl = document.getElementById("status-select");
     if (statusSelectEl) {
       statusSelectEl.addEventListener("change", (e) => {
