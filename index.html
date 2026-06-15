@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Susan CRM v1.1</title>
   <style>
     body {
@@ -17,7 +18,9 @@
         url("/background.jpg") no-repeat center center fixed;
       background-size: cover;
     }
+
     .app-shell { width: 100%; height: 100%; display: none; }
+
     .login-shell {
       background: rgba(255, 255, 255, 0.96);
       padding: 24px 28px;
@@ -34,105 +37,81 @@
       width: 100%; padding: 6px 8px; margin-top: 4px; box-sizing: border-box;
       border-radius: 6px; border: 1px solid #cbd5e1;
     }
-    .login-shell button, .primary-btn {
-      margin-top: 16px; width: 100%; padding: 8px 10px; border-radius: 999px; border: none;
-      background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white; cursor: pointer;
-      font-weight: 600; font-size: 14px;
+    .login-shell button, .composer button {
+      border-radius: 999px; border: none;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      color: white; cursor: pointer; font-weight: 600;
     }
-    .login-shell button:hover, .primary-btn:hover { filter: brightness(1.05); }
+    .login-shell button { margin-top: 16px; width: 100%; padding: 8px 10px; font-size: 14px; }
+    .login-shell button:hover, .composer button:hover { filter: brightness(1.05); }
     .login-error { color: #b00020; font-size: 12px; margin-top: 8px; }
+
     .layout {
-      height: 100vh; width: 100%; display: flex; background: rgba(248, 250, 252, 0.98);
+      height: 100vh; display: flex; background: rgba(248, 250, 252, 0.98);
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(148, 163, 184, 0.3);
-      border-radius: 24px; margin: 12px; overflow: hidden;
+      border-radius: 24px; margin: 12px; overflow: hidden; width: calc(100% - 24px);
     }
     .sidebar {
-      width: 32%; max-width: 420px; min-width: 320px; border-right: 1px solid #e5e7eb;
-      padding: 16px; box-sizing: border-box; background: #ffffff; display: flex; flex-direction: column;
+      width: 32%; max-width: 420px; border-right: 1px solid #e5e7eb;
+      padding: 16px; box-sizing: border-box; overflow-y: auto; background: #ffffff;
     }
-    .main { flex: 1; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; background: #f9fafb; min-width: 0; }
-    .right-panel {
-      width: 280px; border-left: 1px solid #e5e7eb; background: #fff; padding: 14px; box-sizing: border-box; overflow-y: auto;
-    }
-    h2 { font-size: 18px; margin: 0 0 12px; }
+    .main { flex: 1; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; background: #f9fafb; }
+
     .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
-    .small-btn {
-      font-size: 11px; padding: 5px 9px; border-radius: 999px; border: 1px solid #e5e7eb; background: #ffffff; cursor: pointer;
+    .top-bar button, .filter-row select, .status-controls select {
+      font-size: 11px; padding: 4px 8px; border-radius: 999px; border: 1px solid #e5e7eb; background: #ffffff; cursor: pointer;
     }
-    .small-btn:hover { background: #f3f4f6; }
-    .filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-    .filter-row { display: flex; gap: 8px; align-items: center; }
-    .filter-row select, .filter-row input {
-      flex: 1; border: 1px solid #cbd5e1; border-radius: 999px; padding: 6px 10px; font-size: 12px; background: white;
+    .top-bar button:hover { background: #f3f4f6; }
+
+    .filter-card {
+      background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 14px; padding: 10px; margin-bottom: 12px;
     }
-    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
-    .tab {
-      border: 1px solid #dbeafe; background: #eff6ff; color: #1e3a8a; border-radius: 999px;
-      padding: 5px 9px; font-size: 12px; cursor: pointer;
+    .filter-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    .filter-row label { font-size: 11px; color: #4b5563; }
+    .filter-row select { flex: 1; min-width: 0; }
+    .tenant-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px;
+      background: #eef2ff; color: #3730a3; font-size: 11px; font-weight: 700;
     }
-    .tab.active { background: #4f46e5; color: white; border-color: #4f46e5; }
-    .conversation-list { flex: 1; overflow-y: auto; padding-right: 4px; }
+
     .conversation-item {
-      padding: 9px; border-radius: 10px; cursor: pointer; margin-bottom: 7px; border: 1px solid transparent;
-      background: #ffffff; transition: background 0.1s ease, border-color 0.1s ease; box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      padding: 9px; border-radius: 10px; cursor: pointer; margin-bottom: 7px;
+      border: 1px solid transparent; background: #ffffff;
+      transition: background 0.1s ease, border-color 0.1s ease;
     }
     .conversation-item:hover { background: #f3f4ff; }
     .conversation-item.active { border-color: #4f46e5; background: #eef2ff; }
-    .conversation-name { font-weight: 650; font-size: 14px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
-    .conversation-phone, .conversation-email { font-size: 12px; color: #6b7280; margin-top: 2px; }
-    .conversation-preview { font-size: 12px; color: #4b5563; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .badge {
-      font-size: 10px; border-radius: 999px; padding: 2px 7px; border: 1px solid #d1d5db; background: #f9fafb; color: #374151; white-space: nowrap;
-    }
-    .badge.email { background:#ecfeff; border-color:#a5f3fc; color:#155e75; }
-    .badge.whatsapp { background:#ecfdf5; border-color:#bbf7d0; color:#166534; }
-    .badge.voice { background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
-    .badge.all { background:#eef2ff; border-color:#c7d2fe; color:#3730a3; }
-    .pager { display:flex; gap:8px; align-items:center; justify-content:space-between; padding-top:8px; border-top:1px solid #e5e7eb; }
-    .pager button { flex:1; }
-    .pager span { font-size:11px; color:#6b7280; }
+    .conversation-name { font-weight: 700; font-size: 14px; display:flex; justify-content:space-between; gap:8px; }
+    .conversation-phone, .conversation-preview, .conversation-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .conversation-preview { color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .badge { font-size: 10px; border-radius: 999px; padding: 2px 7px; background: #e0f2fe; color: #0369a1; white-space: nowrap; }
+    .badge.email { background: #ecfdf5; color: #047857; }
+    .badge.website_chat { background: #f5f3ff; color: #6d28d9; }
+    .badge.whatsapp { background: #dcfce7; color: #166534; }
+
     .header { border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 8px; }
-    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 12px; }
-    .contact-header { font-size: 13px; color: #111827; line-height: 1.4; }
-    .messages { flex: 1; overflow-y: auto; padding-right: 8px; margin-bottom: 8px; display: flex; flex-direction: column; }
-    .load-older { align-self:center; margin: 4px 0 10px; }
-    .message-wrap { display: flex; flex-direction: column; margin-bottom: 7px; }
-    .message-wrap.inbound { align-items: flex-start; }
-    .message-wrap.outbound { align-items: flex-end; }
-    .message {
-      max-width: 78%; padding: 8px 10px; border-radius: 12px; font-size: 13px; line-height: 1.42; white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .message.inbound { background: #e5e7eb; color:#111827; }
-    .message.outbound { background: #4f46e5; color: #ffffff; }
-    .message.voice { background:#fff7ed; color:#431407; border:1px solid #fed7aa; }
-    .message-meta { font-size: 10px; color: #6b7280; margin-top: 3px; max-width: 78%; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 12px; }
+    .contact-header { font-size: 13px; color: #111827; }
+    .status-controls label { font-size: 12px; color: #4b5563; }
+    .status-controls select { margin-left: 4px; background: #eff6ff; border-color: #cbd5f5; }
+    .stats-panel { font-size: 11px; color: #4b5563; background: #f9fafb; border-radius: 12px; padding: 6px 10px; border: 1px solid rgba(148, 163, 184, 0.4); }
+    .stat-row { display: flex; justify-content: space-between; gap: 14px; }
+    .stat-row strong { font-weight: 700; }
+
+    .messages { flex: 1; overflow-y: auto; padding-right: 8px; margin-bottom: 8px; }
+    .message { max-width: 72%; padding: 8px 10px; border-radius: 10px; margin-bottom: 6px; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+    .message.inbound { background: #e5e7eb; align-self: flex-start; }
+    .message.outbound { background: #4f46e5; color: #ffffff; align-self: flex-end; }
+    .message-meta { font-size: 10px; color: #6b7280; margin-top: 2px; }
     .composer { display: flex; gap: 8px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
     .composer textarea { flex: 1; resize: none; height: 60px; font-family: inherit; border-radius: 8px; border: 1px solid #cbd5e1; padding: 6px 8px; }
-    .composer button, .call-button {
-      padding: 8px 12px; border-radius: 999px; border: none; background: linear-gradient(135deg, #4f46e5, #06b6d4);
-      color: white; cursor: pointer; font-weight: 600; font-size: 13px;
-    }
-    .call-button { background: linear-gradient(135deg, #16a34a, #22c55e); }
-    .composer button:disabled, .call-button:disabled { opacity: 0.5; cursor: default; }
-    .policy-note { font-size: 11px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 7px 9px; border-radius: 10px; margin-bottom: 7px; display:none; }
-    .status-controls { display:flex; align-items:center; gap:8px; flex-wrap: wrap; justify-content:flex-end; }
-    .status-controls label { font-size: 12px; color: #4b5563; }
-    .status-controls select { margin-left: 4px; font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid #cbd5f5; background: #eff6ff; }
-    .stats-panel, .summary-card, .contact-card {
-      font-size: 11px; color: #4b5563; background: #f9fafb; border-radius: 12px; padding: 8px 10px; border: 1px solid rgba(148, 163, 184, 0.4); margin-bottom: 10px;
-    }
-    .stat-row, .detail-row { display: flex; justify-content: space-between; gap:10px; border-bottom:1px solid #eef2f7; padding:4px 0; }
-    .stat-row:last-child, .detail-row:last-child { border-bottom:none; }
-    .detail-row span:first-child { color:#6b7280; }
-    .detail-row strong { text-align:right; color:#111827; font-weight:600; }
-    .panel-title { font-size:13px; font-weight:700; color:#111827; margin:0 0 7px; }
-    .empty-state { color:#6b7280; font-size:13px; text-align:center; padding:24px; }
-    @media (max-width: 1100px) { .right-panel { display:none; } .sidebar { width: 36%; } }
+    .composer button { padding: 8px 12px; font-size: 13px; }
+    .composer button:disabled { opacity: 0.5; cursor: default; }
+    .composer-note { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
     @media (max-width: 900px) {
       .layout { flex-direction: column; }
-      .sidebar { width: 100%; max-width: none; min-width:0; height: 42%; border-right: none; border-bottom: 1px solid #e5e7eb; }
-      .right-panel { display:none; }
+      .sidebar { width: 100%; max-width: none; border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 40vh; }
     }
     @media (max-width: 640px) { .layout { margin: 8px; border-radius: 18px; } .login-shell { margin: 0 8px; } }
   </style>
@@ -140,7 +119,7 @@
 <body>
   <div class="login-shell" id="login-view">
     <h1>Susan CRM Login</h1>
-    <p>The First AI Operating System</p>
+    <p>The First AI Conversational Operating System</p>
     <label for="login-email">Email</label>
     <input id="login-email" type="email" autocomplete="email" />
     <label for="login-password">Password</label>
@@ -153,58 +132,45 @@
     <div class="layout">
       <div class="sidebar">
         <div class="top-bar">
-          <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px;">
             <img src="susan-logo.png" alt="Susan" style="height:26px; border-radius:6px;" />
-            <div style="min-width:0;">
-              <div style="font-weight:600; font-size:14px;">Susan CRM</div>
-              <div style="font-size:11px; color:#6b7280;">Conversation Operating System</div>
+            <div>
+              <div style="font-weight:700; font-size:14px;">Susan CRM</div>
+              <div style="font-size:11px; color:#6b7280;">Multi-channel conversation view</div>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="user-email" style="font-size:11px; color:#6b7280;"></span>
-            <button class="small-btn" id="logout-button">Logout</button>
+            <button id="logout-button">Logout</button>
           </div>
         </div>
 
-        <div class="filters">
+        <div class="filter-card">
+          <div class="tenant-pill" id="active-tenant-pill">Tenant: loading...</div>
           <div class="filter-row">
-            <select id="tenant-filter" title="Tenant">
-              <option value="qbe">QBE</option>
-              <option value="apg">APG</option>
-              <option value="all">All tenants</option>
-            </select>
-            <select id="conversation-channel-filter" title="Channel">
+            <label for="tenant-select">Tenant</label>
+            <select id="tenant-select"></select>
+          </div>
+          <div class="filter-row">
+            <label for="channel-select">Channel</label>
+            <select id="channel-select">
               <option value="all">All channels</option>
-              <option value="whatsapp">WhatsApp</option>
+              <option value="website_chat">Website chat</option>
               <option value="email">Email</option>
+              <option value="whatsapp">WhatsApp</option>
               <option value="voice">Voice</option>
             </select>
           </div>
         </div>
 
-        <div id="conversations" class="conversation-list"></div>
-        <div class="pager">
-          <button class="small-btn" id="prev-conv-btn">Newer</button>
-          <span id="conversation-page-label">Page 1</span>
-          <button class="small-btn" id="next-conv-btn">Older</button>
-        </div>
+        <div id="conversations"></div>
       </div>
 
       <div class="main">
         <div class="header">
           <div class="header-top">
-            <div>
-              <div id="contact-header" class="contact-header">Select a conversation on the left.</div>
-              <div class="tabs" id="message-tabs">
-                <button class="tab active" data-channel="all">Full conversation</button>
-                <button class="tab" data-channel="whatsapp">WhatsApp</button>
-                <button class="tab" data-channel="email">Email</button>
-                <button class="tab" data-channel="voice">Voice</button>
-                <button class="tab" data-channel="summary">Summary</button>
-              </div>
-            </div>
+            <div id="contact-header" class="contact-header">Select a conversation on the left.</div>
             <div class="status-controls">
-              <button id="call-btn" class="call-button" disabled>Call lead</button>
               <label>Status:
                 <select id="status-select" disabled>
                   <option value="open">Open</option>
@@ -213,140 +179,216 @@
               </label>
             </div>
           </div>
-          <div id="summary-strip" class="summary-card" style="display:none;"></div>
+          <div id="stats-panel" class="stats-panel"></div>
         </div>
 
         <div id="messages" class="messages"></div>
-        <div id="policy-note" class="policy-note">
-          Note: WhatsApp free-text replies can normally only be sent within the 24-hour customer-service window. If the user has not messaged recently, use a pre-approved template or contact them by another permitted channel.
-        </div>
         <div class="composer">
-          <textarea id="reply-text" placeholder="Type a WhatsApp reply..." disabled></textarea>
+          <textarea id="reply-text" placeholder="Manual replies are currently WhatsApp-only." disabled></textarea>
           <button id="send-btn" disabled>Send</button>
         </div>
-      </div>
-
-      <div class="right-panel">
-        <div class="stats-panel" id="stats-panel"></div>
-        <div class="contact-card">
-          <div class="panel-title">Contact state</div>
-          <div id="contact-state"><div class="empty-state">Select a conversation.</div></div>
-        </div>
+        <div id="composer-note" class="composer-note">Select a conversation to view details.</div>
       </div>
     </div>
   </div>
 
   <script>
     const API_BASE = "https://api.susan-crm.com";
-
     let currentConversationId = null;
     let currentConversationMeta = null;
-    let currentMessageChannel = "all";
-    let conversationPage = 1;
-    let conversationPageSize = 30;
-    let currentTenant = "qbe";
-    let currentConversationChannel = "all";
-    let messagesPage = 1;
-    let messagesPageSize = 100;
+    let currentTenantKey = "sts";
+    let currentChannel = "all";
 
-    function $(id) { return document.getElementById(id); }
+    const tenantSelect = () => document.getElementById("tenant-select");
+    const channelSelect = () => document.getElementById("channel-select");
 
-    function showLogin() { $("login-view").style.display = "block"; $("app-view").style.display = "none"; }
-    function showApp() { $("login-view").style.display = "none"; $("app-view").style.display = "block"; }
-    function normaliseItems(data) { return Array.isArray(data) ? data : (data.items || data.conversations || []); }
-    function escapeText(value) { return value == null ? "" : String(value); }
-    function badgeClass(channel) { const c = (channel || "all").toLowerCase(); return ["whatsapp","email","voice"].includes(c) ? c : "all"; }
-    function displayChannel(channel) { const c = (channel || "all").toLowerCase(); if (c === "whatsapp") return "WhatsApp"; if (c === "email") return "Email"; if (c === "voice") return "Voice"; return "Full"; }
+    function showLogin() {
+      document.getElementById("login-view").style.display = "block";
+      document.getElementById("app-view").style.display = "none";
+    }
+    function showApp() {
+      document.getElementById("login-view").style.display = "none";
+      document.getElementById("app-view").style.display = "block";
+    }
+
+    function apiUrl(path, params = {}) {
+      const url = new URL(`${API_BASE}${path}`);
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
+      });
+      return url.toString();
+    }
+
+    function normaliseItems(data) {
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.items)) return data.items;
+      return [];
+    }
+
+    function channelLabel(channel) {
+      const c = (channel || "").toLowerCase();
+      if (c === "website_chat") return "Webchat";
+      if (c === "email") return "Email";
+      if (c === "whatsapp") return "WhatsApp";
+      if (c === "voice") return "Voice";
+      return c || "Unknown";
+    }
 
     async function checkAuth() {
       try {
         const res = await fetch(`${API_BASE}/crm/auth/me`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          if ($("user-email") && data.user && data.user.email) $("user-email").textContent = data.user.email;
-          if (data.user && data.user.tenant_key && ["qbe", "apg"].includes(data.user.tenant_key)) {
-            currentTenant = data.user.tenant_key;
-            $("tenant-filter").value = currentTenant;
-          }
+          const emailSpan = document.getElementById("user-email");
+          if (emailSpan && data.user && data.user.email) emailSpan.textContent = data.user.email;
           showApp();
-          await fetchConversations();
-          await fetchStats();
-        } else showLogin();
-      } catch (e) { console.error("Auth check failed", e); showLogin(); }
+          await fetchTenants();
+          await refreshAll();
+        } else {
+          showLogin();
+        }
+      } catch (e) {
+        console.error("Auth check failed", e);
+        showLogin();
+      }
     }
 
     async function login() {
-      const email = $("login-email").value.trim();
-      const password = $("login-password").value.trim();
-      $("login-error").textContent = "";
-      if (!email || !password) { $("login-error").textContent = "Please enter email and password."; return; }
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value.trim();
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
+      if (!email || !password) { errorEl.textContent = "Please enter email and password."; return; }
       try {
         const res = await fetch(`${API_BASE}/crm/auth/login`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ email, password }),
         });
-        if (res.ok) { showApp(); await fetchConversations(); await fetchStats(); }
-        else $("login-error").textContent = "Invalid credentials.";
-      } catch (e) { console.error("Login error", e); $("login-error").textContent = "Login failed. Please try again."; }
+        if (res.ok) {
+          showApp();
+          await fetchTenants();
+          await refreshAll();
+        } else {
+          errorEl.textContent = "Invalid credentials.";
+        }
+      } catch (e) {
+        console.error("Login error", e);
+        errorEl.textContent = "Login failed. Please try again.";
+      }
     }
 
     async function logout() {
       try { await fetch(`${API_BASE}/crm/auth/logout`, { method: "POST", credentials: "include" }); }
       catch (e) { console.error("Logout error", e); }
       finally {
-        currentConversationId = null; currentConversationMeta = null;
-        $("conversations").innerHTML = ""; $("messages").innerHTML = ""; $("contact-header").textContent = "Select a conversation on the left.";
-        $("reply-text").value = ""; $("reply-text").disabled = true; $("send-btn").disabled = true; $("call-btn").disabled = true;
-        $("status-select").disabled = true; $("stats-panel").innerHTML = ""; $("contact-state").innerHTML = '<div class="empty-state">Select a conversation.</div>';
+        currentConversationId = null;
+        currentConversationMeta = null;
+        document.getElementById("conversations").innerHTML = "";
+        document.getElementById("messages").innerHTML = "";
+        document.getElementById("contact-header").textContent = "Select a conversation on the left.";
+        document.getElementById("reply-text").value = "";
+        document.getElementById("reply-text").disabled = true;
+        document.getElementById("send-btn").disabled = true;
+        document.getElementById("status-select").disabled = true;
+        document.getElementById("stats-panel").innerHTML = "";
+        document.getElementById("composer-note").textContent = "Select a conversation to view details.";
         showLogin();
       }
     }
 
-    function buildConversationQuery() {
-      const params = new URLSearchParams();
-      params.set("page", conversationPage);
-      params.set("page_size", conversationPageSize);
-      if (currentTenant !== "all") params.set("tenant_key", currentTenant);
-      if (currentConversationChannel !== "all") params.set("channel", currentConversationChannel);
-      return params.toString();
+    async function fetchTenants() {
+      const select = tenantSelect();
+      select.innerHTML = "";
+      try {
+        const res = await fetch(`${API_BASE}/crm/tenants`, { credentials: "include" });
+        if (!res.ok) throw new Error("tenant fetch failed");
+        const tenants = normaliseItems(await res.json());
+        tenants.forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t.tenant_key;
+          opt.textContent = `${t.name || t.tenant_key} (${t.tenant_key})`;
+          select.appendChild(opt);
+        });
+        if (tenants.some(t => t.tenant_key === "sts")) currentTenantKey = "sts";
+        else if (tenants.length) currentTenantKey = tenants[0].tenant_key;
+        select.value = currentTenantKey;
+      } catch (e) {
+        console.error("Failed to fetch tenants", e);
+        ["sts", "apg", "qbe"].forEach((key) => {
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.textContent = key.toUpperCase();
+          select.appendChild(opt);
+        });
+        select.value = currentTenantKey;
+      }
+      updateTenantPill();
+    }
+
+    function updateTenantPill() {
+      const selected = tenantSelect().selectedOptions[0];
+      document.getElementById("active-tenant-pill").textContent = `Tenant: ${selected ? selected.textContent : currentTenantKey}`;
+    }
+
+    async function refreshAll() {
+      currentConversationId = null;
+      currentConversationMeta = null;
+      document.getElementById("messages").innerHTML = "";
+      document.getElementById("contact-header").textContent = "Select a conversation on the left.";
+      document.getElementById("reply-text").value = "";
+      document.getElementById("reply-text").disabled = true;
+      document.getElementById("send-btn").disabled = true;
+      document.getElementById("status-select").disabled = true;
+      document.getElementById("composer-note").textContent = "Select a conversation to view details.";
+      await fetchConversations();
+      await fetchStats();
     }
 
     async function fetchConversations() {
-      const res = await fetch(`${API_BASE}/crm/conversations?${buildConversationQuery()}`, { credentials: "include" });
+      const res = await fetch(apiUrl("/crm/conversations", {
+        tenant_key: currentTenantKey,
+        channel: currentChannel,
+        page_size: 50,
+      }), { credentials: "include" });
       if (!res.ok) { console.error("Failed to fetch conversations"); return; }
-      const data = await res.json();
-      renderConversations(normaliseItems(data));
-      $("conversation-page-label").textContent = `Page ${conversationPage}`;
+      renderConversations(normaliseItems(await res.json()));
     }
 
     function renderConversations(conversations) {
-      const container = $("conversations");
+      const container = document.getElementById("conversations");
       container.innerHTML = "";
-      if (!conversations.length) { container.innerHTML = '<div class="empty-state">No conversations found.</div>'; return; }
-
+      if (!conversations.length) {
+        container.innerHTML = `<div style="font-size:12px; color:#6b7280; padding:10px;">No conversations for this tenant/channel yet.</div>`;
+        return;
+      }
       conversations.forEach((conv) => {
         const div = document.createElement("div");
-        div.className = "conversation-item" + (conv.id === currentConversationId ? " active" : "");
+        div.className = "conversation-item";
         div.dataset.id = conv.id;
 
-        const channel = conv.channel_name || conv.channel || conv.latest_channel || "all";
-        const nameText = conv.name || conv.contact?.name || "(No name)";
-        const phoneText = conv.phone_e164 || conv.contact?.phone_e164 || "";
-        const emailText = conv.email || conv.contact?.email || "";
-        const previewText = conv.last_message_preview || conv.last_message_body || "";
-        const tenantText = conv.tenant_key || currentTenant;
+        const displayName = conv.display_name || conv.name || conv.email || conv.phone_e164 || "Anonymous visitor";
+        const channel = conv.channel_name || "unknown";
 
-        div.innerHTML = `
-          <div class="conversation-name">
-            <span>${escapeText(nameText)}</span>
-            <span class="badge ${badgeClass(channel)}">${displayChannel(channel)}</span>
-          </div>
-          <div class="conversation-phone">${escapeText(phoneText)}</div>
-          <div class="conversation-email">${escapeText(emailText)}</div>
-          <div class="conversation-preview">${escapeText(previewText)}</div>
-          <div style="margin-top:4px;"><span class="badge all">${escapeText((tenantText || "").toUpperCase())}</span></div>
-        `;
+        const name = document.createElement("div");
+        name.className = "conversation-name";
+        name.innerHTML = `<span>${escapeHtml(displayName)}</span><span class="badge ${escapeAttr(channel)}">${channelLabel(channel)}</span>`;
 
+        const detail = document.createElement("div");
+        detail.className = "conversation-phone";
+        detail.textContent = conv.email || conv.phone_e164 || conv.contact_id || "";
+
+        const preview = document.createElement("div");
+        preview.className = "conversation-preview";
+        preview.textContent = conv.last_message_body || conv.last_message_preview || "";
+
+        const meta = document.createElement("div");
+        meta.className = "conversation-meta";
+        const unread = conv.unread_count ? ` • ${conv.unread_count} unread` : "";
+        meta.textContent = `${conv.status || "open"}${unread}`;
+
+        div.appendChild(name); div.appendChild(detail); div.appendChild(preview); div.appendChild(meta);
         div.addEventListener("click", () => {
           document.querySelectorAll(".conversation-item").forEach((el) => el.classList.remove("active"));
           div.classList.add("active");
@@ -357,129 +399,56 @@
     }
 
     async function loadConversation(conv) {
-      currentConversationId = conv.id; currentConversationMeta = conv; messagesPage = 1;
-      $("call-btn").disabled = false;
-      const statusSelect = $("status-select"); statusSelect.disabled = false; statusSelect.value = conv.status || "open";
-      renderHeader(conv);
-      renderComposerState();
-      await fetchConversationSummary(conv.id);
-      await fetchMessages();
-      await markConversationRead(conv.id);
-      await fetchStats();
-    }
+      currentConversationId = conv.id;
+      currentConversationMeta = conv;
 
-    function renderHeader(conv) {
-      const name = conv.name || conv.contact?.name || "(No name)";
-      const phone = conv.phone_e164 || conv.contact?.phone_e164 || "";
-      const email = conv.email || conv.contact?.email || "";
-      const tenant = (conv.tenant_key || currentTenant || "").toUpperCase();
-      const bits = [name, phone, email].filter(Boolean).join(" – ");
-      $("contact-header").textContent = `${bits || "Contact"} ${tenant ? "(" + tenant + ")" : ""}`;
-    }
+      const statusSelect = document.getElementById("status-select");
+      statusSelect.disabled = false;
+      statusSelect.value = conv.status || "open";
 
-    function buildMessagesQuery() {
-      const params = new URLSearchParams();
-      params.set("page", messagesPage);
-      params.set("page_size", messagesPageSize);
-      if (currentMessageChannel !== "all" && currentMessageChannel !== "summary") params.set("channel", currentMessageChannel);
-      return params.toString();
-    }
+      const canManualSend = (conv.channel_name || "").toLowerCase() === "whatsapp";
+      document.getElementById("reply-text").disabled = !canManualSend;
+      document.getElementById("send-btn").disabled = !canManualSend;
+      document.getElementById("composer-note").textContent = canManualSend
+        ? "Manual reply available for WhatsApp conversations."
+        : "Manual sending is disabled for this channel. Susan can still reply via the live channel itself.";
 
-    async function fetchMessages() {
-      if (!currentConversationId) return;
-      if (currentMessageChannel === "summary") { await fetchConversationSummary(currentConversationId, true); return; }
-      const res = await fetch(`${API_BASE}/crm/conversations/${currentConversationId}/messages?${buildMessagesQuery()}`, { credentials: "include" });
-      if (!res.ok) { console.error("Failed to fetch conversation messages"); renderMessages([]); return; }
+      const res = await fetch(apiUrl(`/crm/conversations/${conv.id}/messages`, {
+        channel: "all",
+        page_size: 300,
+      }), { credentials: "include" });
+      if (!res.ok) { console.error("Failed to fetch conversation messages"); return; }
       const data = await res.json();
-      renderMessages(normaliseItems(data));
+      renderConversationDetail(conv, normaliseItems(data));
+      await markConversationRead(conv.id);
+      fetchStats();
     }
 
-    function renderMessages(messages) {
-      const container = $("messages");
-      container.innerHTML = "";
-      if (messagesPage > 1) {
-        const btn = document.createElement("button");
-        btn.className = "small-btn load-older"; btn.textContent = "Back to latest messages";
-        btn.onclick = async () => { messagesPage = 1; await fetchMessages(); };
-        container.appendChild(btn);
-      } else if (messages.length >= messagesPageSize) {
-        const btn = document.createElement("button");
-        btn.className = "small-btn load-older"; btn.textContent = "View older messages";
-        btn.onclick = async () => { messagesPage += 1; await fetchMessages(); };
-        container.appendChild(btn);
-      }
-      if (!messages.length) { container.innerHTML += '<div class="empty-state">No messages for this view.</div>'; return; }
+    function renderConversationDetail(conv, messages) {
+      const contactHeader = document.getElementById("contact-header");
+      const messagesContainer = document.getElementById("messages");
+      messagesContainer.innerHTML = "";
+      const name = conv.display_name || conv.name || conv.email || conv.phone_e164 || "Anonymous visitor";
+      contactHeader.textContent = `${name} • ${channelLabel(conv.channel_name)} • ${conv.tenant_key || currentTenantKey}`;
 
       messages.forEach((msg) => {
-        const direction = msg.direction === "outbound" ? "outbound" : "inbound";
-        const channel = msg.channel_name || msg.channel || currentMessageChannel || "";
         const wrap = document.createElement("div");
-        wrap.className = `message-wrap ${direction}`;
+        wrap.style.display = "flex";
+        wrap.style.flexDirection = "column";
+        wrap.style.alignItems = msg.direction === "outbound" ? "flex-end" : "flex-start";
 
         const bubble = document.createElement("div");
-        bubble.className = `message ${direction} ${badgeClass(channel) === "voice" ? "voice" : ""}`;
-        bubble.textContent = msg.body || msg.transcript || msg.summary || "";
+        bubble.className = `message ${msg.direction}`;
+        bubble.textContent = msg.body;
 
         const meta = document.createElement("div");
         meta.className = "message-meta";
         const d = msg.created_at ? new Date(msg.created_at).toLocaleString() : "";
-        const subject = msg.subject ? ` · ${msg.subject}` : "";
-        meta.textContent = `${displayChannel(channel)} · ${d}${subject}`;
+        meta.textContent = `${channelLabel(msg.channel_name || conv.channel_name)} ${d ? "• " + d : ""}`;
 
-        wrap.appendChild(bubble); wrap.appendChild(meta); container.appendChild(wrap);
+        wrap.appendChild(bubble); wrap.appendChild(meta); messagesContainer.appendChild(wrap);
       });
-      container.scrollTop = container.scrollHeight;
-    }
-
-    async function fetchConversationSummary(conversationId, renderOnly = false) {
-      const strip = $("summary-strip");
-      try {
-        const res = await fetch(`${API_BASE}/crm/conversations/${conversationId}/summary`, { credentials: "include" });
-        if (!res.ok) throw new Error("summary unavailable");
-        const data = await res.json();
-        renderContactState(data.contact || data.contact_state || currentConversationMeta || {});
-        const summary = data.summary || data.handover_summary || data.status_summary || "Still awaiting enough information for handover.";
-        strip.style.display = "block";
-        strip.innerHTML = `<div class="panel-title">Summary</div><div>${escapeText(summary)}</div>`;
-        if (renderOnly) {
-          $("messages").innerHTML = `<div class="summary-card"><div class="panel-title">Summary</div><div>${escapeText(summary)}</div></div>`;
-        }
-      } catch (e) {
-        renderContactState(currentConversationMeta || {});
-        strip.style.display = "block";
-        strip.innerHTML = `<div class="panel-title">Summary</div><div>Still awaiting response / not enough information for handover yet.</div>`;
-        if (renderOnly) $("messages").innerHTML = strip.outerHTML;
-      }
-    }
-
-    function renderContactState(contact) {
-      const el = $("contact-state");
-      const fields = [
-        ["Tenant", contact.tenant_key || currentTenant],
-        ["Name", contact.name],
-        ["Email", contact.email],
-        ["Phone", contact.phone_e164],
-        ["Capital", contact.investing_capital_gbp ? `£${Number(contact.investing_capital_gbp).toLocaleString()}` : contact.budget],
-        ["Homeowner", contact.homeowner],
-        ["First-time investor", contact.first_time_property_investor],
-        ["Experience", contact.experience],
-        ["Timeframe", contact.investment_time_horizon_months || contact.expected],
-        ["Strategy", contact.preferred_strategy],
-        ["Location", contact.preferred_location],
-        ["Stage", contact.qualification_stage || contact.status],
-        ["Last inbound", contact.last_inbound_at ? new Date(contact.last_inbound_at).toLocaleString() : ""],
-      ];
-      el.innerHTML = fields.map(([k,v]) => `<div class="detail-row"><span>${k}</span><strong>${escapeText(v || "—")}</strong></div>`).join("");
-    }
-
-    function renderComposerState() {
-      const conv = currentConversationMeta || {};
-      const channel = (currentMessageChannel === "all" ? (conv.channel_name || conv.channel) : currentMessageChannel || "").toLowerCase();
-      const canSendWhatsapp = channel === "whatsapp" || (currentMessageChannel === "all" && (conv.channel_name || "").toLowerCase() === "whatsapp");
-      $("policy-note").style.display = canSendWhatsapp ? "block" : "none";
-      $("reply-text").placeholder = canSendWhatsapp ? "Type a WhatsApp reply..." : "Manual send is only enabled for WhatsApp in this MVP.";
-      $("reply-text").disabled = !canSendWhatsapp;
-      $("send-btn").disabled = !canSendWhatsapp;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     async function markConversationRead(conversationId) {
@@ -487,101 +456,78 @@
       catch (e) { console.error("Failed to mark conversation read", e); }
     }
 
-    async function createCallTask() {
-      if (!currentConversationId) return;
-      const btn = $("call-btn"); btn.disabled = true; btn.textContent = "Queued...";
-      try {
-        const res = await fetch(`${API_BASE}/crm/conversations/${currentConversationId}/call`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-          body: JSON.stringify({ call_mode: "inbound_followup" }),
-        });
-        if (!res.ok) throw new Error("Failed");
-        btn.textContent = "Call queued";
-      } catch (err) {
-        console.error("Error creating call task", err); btn.textContent = "Call failed";
-        setTimeout(() => { btn.textContent = "Call lead"; btn.disabled = false; }, 2000);
-      }
-    }
-
     async function sendReply() {
-      const textArea = $("reply-text"); const btn = $("send-btn");
-      const body = textArea.value.trim(); if (!body || !currentConversationId) return;
+      const textArea = document.getElementById("reply-text");
+      const btn = document.getElementById("send-btn");
+      const body = textArea.value.trim();
+      if (!body || !currentConversationId) return;
       btn.disabled = true;
       try {
         const res = await fetch(`${API_BASE}/crm/conversations/${currentConversationId}/send`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ body }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ body }),
         });
-        if (res.ok) { textArea.value = ""; await fetchMessages(); await fetchConversations(); await fetchStats(); }
-        else { const err = await res.text(); console.error("Failed to send message", err); alert("Message send failed. Check the 24-hour WhatsApp window or backend logs."); }
+        if (res.ok) {
+          textArea.value = "";
+          if (currentConversationMeta) await loadConversation(currentConversationMeta);
+          await fetchConversations(); await fetchStats();
+        } else {
+          console.error("Failed to send message", await res.text());
+        }
       } catch (err) { console.error("Error sending message", err); }
-      finally { renderComposerState(); }
+      finally { btn.disabled = false; }
     }
 
     async function updateStatus(newStatus) {
       if (!currentConversationId) return;
       try {
         const res = await fetch(`${API_BASE}/crm/conversations/${currentConversationId}`, {
-          method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ status: newStatus }),
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ status: newStatus }),
         });
         if (!res.ok) { console.error("Failed to update status"); return; }
         if (currentConversationMeta) currentConversationMeta.status = newStatus;
-        await fetchStats();
+        fetchStats(); fetchConversations();
       } catch (e) { console.error("Error updating status", e); }
     }
 
     async function fetchStats() {
       try {
-        const params = new URLSearchParams();
-        if (currentTenant !== "all") params.set("tenant_key", currentTenant);
-        const res = await fetch(`${API_BASE}/crm/stats?${params.toString()}`, { credentials: "include" });
+        const res = await fetch(apiUrl("/crm/stats", { tenant_key: currentTenantKey }), { credentials: "include" });
         if (!res.ok) { console.error("Failed to fetch stats"); return; }
         renderStats(await res.json());
       } catch (e) { console.error("Error fetching stats", e); }
     }
 
     function renderStats(stats) {
-      const panel = $("stats-panel"); if (!panel) return;
+      const panel = document.getElementById("stats-panel");
+      if (!panel) return;
       panel.innerHTML = `
-        <div class="panel-title">Stats</div>
         <div class="stat-row"><span>Total conversations</span><strong>${stats.total_conversations ?? 0}</strong></div>
-        <div class="stat-row"><span>Conversations with replies</span><strong>${stats.conversations_with_replies ?? 0}</strong></div>
-        <div class="stat-row"><span>Inbound messages</span><strong>${stats.total_inbound_messages ?? 0}</strong></div>
-        <div class="stat-row"><span>Outbound messages</span><strong>${stats.total_outbound_messages ?? 0}</strong></div>
+        <div class="stat-row"><span>Website chat</span><strong>${stats.website_chat_conversations ?? 0}</strong></div>
+        <div class="stat-row"><span>Email</span><strong>${stats.email_conversations ?? 0}</strong></div>
+        <div class="stat-row"><span>WhatsApp</span><strong>${stats.whatsapp_conversations ?? 0}</strong></div>
         <div class="stat-row"><span>Unread inbound</span><strong>${stats.total_unread_inbound ?? 0}</strong></div>
       `;
     }
 
-    $("login-button").addEventListener("click", login);
-    $("logout-button").addEventListener("click", logout);
-    $("send-btn").addEventListener("click", sendReply);
-    $("call-btn").addEventListener("click", createCallTask);
-    $("status-select").addEventListener("change", (e) => updateStatus(e.target.value));
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"]/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m]));
+    }
+    function escapeAttr(value) { return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "_"); }
 
-    $("tenant-filter").addEventListener("change", async (e) => {
-      currentTenant = e.target.value; conversationPage = 1; currentConversationId = null; currentConversationMeta = null;
-      $("messages").innerHTML = ""; $("contact-header").textContent = "Select a conversation on the left.";
-      await fetchConversations(); await fetchStats(); renderComposerState();
-    });
-    $("conversation-channel-filter").addEventListener("change", async (e) => {
-      currentConversationChannel = e.target.value; conversationPage = 1; currentConversationId = null; currentConversationMeta = null;
-      $("messages").innerHTML = ""; $("contact-header").textContent = "Select a conversation on the left.";
-      await fetchConversations(); renderComposerState();
-    });
-    $("prev-conv-btn").addEventListener("click", async () => { if (conversationPage > 1) { conversationPage -= 1; await fetchConversations(); } });
-    $("next-conv-btn").addEventListener("click", async () => { conversationPage += 1; await fetchConversations(); });
-
-    document.querySelectorAll("#message-tabs .tab").forEach((tab) => {
-      tab.addEventListener("click", async () => {
-        document.querySelectorAll("#message-tabs .tab").forEach((el) => el.classList.remove("active"));
-        tab.classList.add("active");
-        currentMessageChannel = tab.dataset.channel || "all"; messagesPage = 1;
-        renderComposerState();
-        await fetchMessages();
-      });
-    });
+    document.getElementById("login-button").addEventListener("click", login);
+    document.getElementById("logout-button").addEventListener("click", logout);
+    document.getElementById("send-btn").addEventListener("click", sendReply);
+    document.getElementById("status-select").addEventListener("change", (e) => updateStatus(e.target.value));
+    tenantSelect().addEventListener("change", async (e) => { currentTenantKey = e.target.value; updateTenantPill(); await refreshAll(); });
+    channelSelect().addEventListener("change", async (e) => { currentChannel = e.target.value; await refreshAll(); });
 
     checkAuth();
   </script>
 </body>
 </html>
-
