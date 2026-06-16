@@ -109,6 +109,36 @@
     .composer button:disabled { opacity: 0.5; cursor: default; }
     .composer-note { font-size: 11px; color: #6b7280; margin-top: 4px; }
 
+    /* Change-password modal */
+    .cp-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(15, 23, 42, 0.55);
+    }
+    .cp-box {
+      background: #ffffff; border-radius: 16px; padding: 28px;
+      width: 360px; max-width: calc(100vw - 32px);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+    }
+    .cp-box h2 { margin: 0 0 20px; font-size: 16px; font-weight: 700; }
+    .cp-box label { display: block; font-size: 13px; margin-top: 12px; color: #374151; }
+    .cp-box input {
+      width: 100%; padding: 6px 8px; margin-top: 4px; box-sizing: border-box;
+      border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px;
+    }
+    .cp-error { color: #b00020; font-size: 12px; margin-top: 10px; min-height: 16px; }
+    .cp-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+    .cp-actions button {
+      border-radius: 999px; border: none; padding: 7px 16px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .cp-actions .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white;
+    }
+    .cp-actions .btn-primary:hover { filter: brightness(1.05); }
+    .cp-actions .btn-secondary { background: #f3f4f6; color: #374151; }
+    .cp-actions .btn-secondary:hover { background: #e5e7eb; }
+
     @media (max-width: 900px) {
       .layout { flex-direction: column; }
       .sidebar { width: 100%; max-width: none; border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 40vh; }
@@ -141,6 +171,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="user-email" style="font-size:11px; color:#6b7280;"></span>
+            <button id="change-password-btn">Change Password</button>
             <button id="logout-button">Logout</button>
           </div>
         </div>
@@ -188,6 +219,32 @@
           <button id="send-btn" disabled>Send</button>
         </div>
         <div id="composer-note" class="composer-note">Select a conversation to view details.</div>
+      </div>
+    </div>
+
+    <!-- Change password modal -->
+    <div class="cp-overlay" id="cp-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="cp-title">
+      <div class="cp-box">
+        <h2 id="cp-title">Change Password</h2>
+        <form id="cp-form" novalidate>
+          <label>
+            Current password
+            <input type="password" id="cp-current" required autocomplete="current-password" />
+          </label>
+          <label>
+            New password
+            <input type="password" id="cp-new" required autocomplete="new-password" />
+          </label>
+          <label>
+            Confirm new password
+            <input type="password" id="cp-confirm" required autocomplete="new-password" />
+          </label>
+          <div class="cp-error" id="cp-error"></div>
+          <div class="cp-actions">
+            <button type="button" class="btn-secondary" id="cp-cancel">Cancel</button>
+            <button type="submit" class="btn-primary">Update password</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -244,6 +301,7 @@
           showApp();
           await fetchTenants();
           await refreshAll();
+          startPolling();
         } else {
           showLogin();
         }
@@ -270,6 +328,7 @@
           showApp();
           await fetchTenants();
           await refreshAll();
+          startPolling();
         } else {
           errorEl.textContent = "Invalid credentials.";
         }
@@ -280,6 +339,7 @@
     }
 
     async function logout() {
+      stopPolling();
       try { await fetch(`${API_BASE}/crm/auth/logout`, { method: "POST", credentials: "include" }); }
       catch (e) { console.error("Logout error", e); }
       finally {
@@ -367,6 +427,9 @@
         const div = document.createElement("div");
         div.className = "conversation-item";
         div.dataset.id = conv.id;
+
+        // Preserve active highlight during silent poll refreshes
+        if (conv.id === currentConversationId) div.classList.add("active");
 
         const displayName = conv.display_name || conv.name || conv.email || conv.phone_e164 || "Anonymous visitor";
         const channel = conv.channel_name || "unknown";
@@ -520,8 +583,154 @@
     }
     function escapeAttr(value) { return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "_"); }
 
+    // ---- Polling ----
+
+    const POLL_BASE_MS = 9000;
+    const POLL_MAX_MS  = 72000; // caps after 3 doublings: 9s → 18s → 36s → 72s
+    let pollTimer     = null;
+    let pollInterval  = POLL_BASE_MS;
+    let pollFailures  = 0;
+    let pollingActive = false;
+
+    function startPolling() {
+      pollingActive = true;
+      pollInterval  = POLL_BASE_MS;
+      pollFailures  = 0;
+      if (!document.hidden) schedulePoll();
+    }
+
+    function stopPolling() {
+      pollingActive = false;
+      if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    }
+
+    function schedulePoll() {
+      if (pollTimer) clearTimeout(pollTimer);
+      pollTimer = setTimeout(doPoll, pollInterval);
+    }
+
+    async function doPoll() {
+      pollTimer = null;
+      if (!pollingActive) return;
+      try {
+        const tasks = [silentPollConversations(), silentPollStats()];
+        if (currentConversationId) tasks.push(silentPollMessages());
+        await Promise.all(tasks);
+        pollFailures = 0;
+        pollInterval = POLL_BASE_MS;
+      } catch (e) {
+        pollFailures++;
+        pollInterval = Math.min(POLL_BASE_MS * Math.pow(2, pollFailures), POLL_MAX_MS);
+        console.warn(`[poll] failed (${pollFailures}x), backing off to ${(pollInterval / 1000).toFixed(0)}s`, e);
+      }
+      if (pollingActive && !document.hidden) schedulePoll();
+    }
+
+    async function silentPollConversations() {
+      const res = await fetch(apiUrl("/crm/conversations", {
+        tenant_key: currentTenantKey, channel: currentChannel, page_size: 50,
+      }), { credentials: "include" });
+      if (!res.ok) throw new Error(`conversations ${res.status}`);
+      renderConversations(normaliseItems(await res.json()));
+    }
+
+    async function silentPollStats() {
+      const res = await fetch(apiUrl("/crm/stats", { tenant_key: currentTenantKey }), { credentials: "include" });
+      if (!res.ok) throw new Error(`stats ${res.status}`);
+      renderStats(await res.json());
+    }
+
+    async function silentPollMessages() {
+      if (!currentConversationId || !currentConversationMeta) return;
+      const messagesEl = document.getElementById("messages");
+      // Remember whether the user is scrolled to (or near) the bottom
+      const atBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 80;
+      const prevScroll = messagesEl.scrollTop;
+
+      const res = await fetch(apiUrl(`/crm/conversations/${currentConversationId}/messages`, {
+        channel: "all", page_size: 300,
+      }), { credentials: "include" });
+      if (!res.ok) throw new Error(`messages ${res.status}`);
+      renderConversationDetail(currentConversationMeta, normaliseItems(await res.json()));
+      // renderConversationDetail always scrolls to the bottom; restore position if user had scrolled up
+      if (!atBottom) messagesEl.scrollTop = prevScroll;
+    }
+
+    // Resume immediately when the tab becomes visible again
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && pollingActive && !pollTimer) doPoll();
+    });
+
+    // ---- Change password modal ----
+
+    const cpModal  = document.getElementById("cp-modal");
+    const cpForm   = document.getElementById("cp-form");
+    const cpError  = document.getElementById("cp-error");
+
+    function openCpModal() {
+      cpForm.reset();
+      cpError.textContent = "";
+      cpModal.style.display = "flex";
+      document.getElementById("cp-current").focus();
+    }
+
+    function closeCpModal() {
+      cpModal.style.display = "none";
+      cpForm.reset();
+    }
+
+    cpModal.addEventListener("click", (e) => {
+      // Close when clicking the backdrop (the overlay itself, not the box)
+      if (e.target === cpModal) closeCpModal();
+    });
+
+    document.getElementById("cp-cancel").addEventListener("click", closeCpModal);
+
+    cpForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      cpError.textContent = "";
+
+      const current = document.getElementById("cp-current").value;
+      const newPw   = document.getElementById("cp-new").value;
+      const confirm = document.getElementById("cp-confirm").value;
+
+      if (newPw.length < 8) {
+        cpError.textContent = "New password must be at least 8 characters.";
+        return;
+      }
+      if (newPw !== confirm) {
+        cpError.textContent = "New passwords do not match.";
+        return;
+      }
+
+      const submitBtn = cpForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/crm/auth/change-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ current_password: current, new_password: newPw }),
+        });
+        if (res.ok) {
+          closeCpModal();
+          alert("Password updated successfully.");
+        } else {
+          const data = await res.json().catch(() => ({}));
+          cpError.textContent = data.detail || "Something went wrong. Please try again.";
+        }
+      } catch {
+        cpError.textContent = "Network error. Please try again.";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    // ---- Event wiring ----
+
     document.getElementById("login-button").addEventListener("click", login);
     document.getElementById("logout-button").addEventListener("click", logout);
+    document.getElementById("change-password-btn").addEventListener("click", openCpModal);
     document.getElementById("send-btn").addEventListener("click", sendReply);
     document.getElementById("status-select").addEventListener("change", (e) => updateStatus(e.target.value));
     tenantSelect().addEventListener("change", async (e) => { currentTenantKey = e.target.value; updateTenantPill(); await refreshAll(); });
